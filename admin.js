@@ -1,5 +1,5 @@
 // Tambahkan import untuk messaging
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-sw.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 // ... kode inisialisasi db yang sudah ada ...
 import { db } from './firebase-init.js';
