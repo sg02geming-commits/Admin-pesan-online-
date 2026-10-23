@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Warung Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🔔 Admin Toko</h1>
+    <a href="index.html">← Halaman Pembeli</a>
+  </header>
+
+  <div class="container">
+    <h2 style="margin-bottom:12px;">Pesanan Masuk</h2>
+    <div id="pesanan-list"><div class="empty">Memuat...</div></div>
+
+    <h2 style="margin:24px 0 12px;">Kelola Menu</h2>
+    <div class="card">
+      <h3 id="form-judul">Tambah Menu Baru</h3>
+      <input type="hidden" id="edit-id">
+      <label>Nama Menu</label>
+      <input id="input-nama" placeholder="Contoh: Nasi Goreng">
+      <label>Harga (Rp)</label>
+      <input id="input-harga" type="number" placeholder="15000">
+      <div class="row">
+        <button id="btn-simpan">Simpan</button>
+        <button id="btn-batal" class="danger" style="display:none;">Batal</button>
+      </div>
+    </div>
+    <div id="menu-admin-list"></div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
