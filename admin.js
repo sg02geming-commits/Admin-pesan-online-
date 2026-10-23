@@ -1,3 +1,7 @@
+// Tambahkan import untuk messaging
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
+// ... kode inisialisasi db yang sudah ada ...
 import { db } from './firebase-init.js';
 import {
   collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc,
@@ -156,3 +160,44 @@ function resetForm() {
   formJudul.textContent = 'Tambah Menu Baru';
   btnBatal.style.display = 'none';
 }
+
+// --- LOGIKA NOTIFIKASI PUSH ---
+const VAPID_KEY = "BDc3uruxJY2y8J8nRKlsZk1_DvglGBCBOF86DZ6tk_CiUKx3EjKRzZmKGu_nPlAbZxzxhNexntv0IKLWDdch_VM"; // Paste dari Langkah 1
+
+async function mintaIzinNotifikasi() {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('Izin notifikasi diberikan.');
+      
+      const messaging = getMessaging();
+      
+      // Dapatkan token unik untuk device ini
+      const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+      
+      if (currentToken) {
+        console.log('Token FCM berhasil didapat:', currentToken);
+        // SIMPAN TOKEN INI KE DATABASE (Firestore)
+        // Kamu perlu menyimpannya agar backend bisa mengirim pesan ke token ini
+        // Contoh: simpan ke koleksi 'tokens_admin'
+        // await addDoc(collection(db, 'tokens_admin'), { token: currentToken, dibuat: serverTimestamp() });
+      } else {
+        console.log('Gagal mendapatkan token. Pastikan izin diberikan.');
+      }
+    } else {
+      console.log('Izin notifikasi ditolak.');
+    }
+  } catch (error) {
+    console.error('Error saat meminta izin:', error);
+  }
+}
+
+// Panggil fungsi ini saat halaman admin dimuat
+mintaIzinNotifikasi();
+
+// Menangani pesan saat halaman admin SEDANG TERBUKA
+onMessage(getMessaging(), (payload) => {
+  console.log('Pesan diterima saat foreground:', payload);
+  // Kamu bisa memunculkan alert atau toast di sini
+  alert(payload.notification?.title + "\n" + payload.notification?.body);
+});
