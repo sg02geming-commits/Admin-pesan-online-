@@ -1,4 +1,3 @@
-// 1. IMPORT SEMUA KEBUTUHAN DI ATAS
 import { db } from './firebase-config.js';
 import { 
   collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, 
@@ -6,86 +5,39 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
-// ==========================================
-// BAGIAN 1: LOGIKA NOTIFIKASI FCM (PUSH)
-// ==========================================
-const VAPID_KEY = "BDc3uruxJY2y8J8nRKlsZk1_DvglGBCBOF86DZ6tk_CiUKx3EjKRzZmKGu_nPlAbZxzxhNexntv0IKLWDdch_VM";
-
-async function mintaIzinNotifikasi() {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      console.log('Izin notifikasi diberikan.');
-      
-      const messaging = getMessaging();
-      // Dapatkan token unik untuk device ini
-      const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
-      
-      if (currentToken) {
-        console.log('%c TOKEN FCM BERHASIL DIDAPAT:', 'color: green; font-weight: bold;', currentToken);
-        // Catatan: Simpan token ini untuk tes manual di Firebase Console
-      } else {
-        console.log('Gagal mendapatkan token. Pastikan izin diberikan.');
-      }
-    } else {
-      console.log('Izin notifikasi ditolak.');
-    }
-  } catch (error) {
-    console.error('Error saat meminta izin:', error);
-  }
-}
-
-// Jalankan permintaan izin saat halaman dibuka
-mintaIzinNotifikasi();
-
-// Menangani pesan saat halaman admin SEDANG TERBUKA (Foreground)
-onMessage(getMessaging(), (payload) => {
-  console.log('Pesan diterima saat foreground:', payload);
-  alert(payload.notification?.title + "\n" + payload.notification?.body);
-});
-
-
-// ==========================================
-// BAGIAN 2: NAVIGASI SIDEBAR
-// ==========================================
+// ============ NAVIGASI SIDEBAR ============
 const navMenu = document.getElementById('nav-menu');
 const sectionPesanan = document.getElementById('section-pesanan');
 const sectionMenu = document.getElementById('section-menu');
+const navPesanan = document.querySelector('nav a:first-child');
 
-navMenu.onclick = (e) => {
-  e.preventDefault();
-  sectionPesanan.style.display = 'none';
-  sectionMenu.style.display = 'block';
-  navMenu.classList.add('active');
-  document.querySelector('nav a:first-child').classList.remove('active');
-};
+if (navMenu && navPesanan) {
+  navMenu.onclick = (e) => {
+    e.preventDefault();
+    sectionPesanan.style.display = 'none';
+    sectionMenu.style.display = 'block';
+    navMenu.classList.add('active');
+    navPesanan.classList.remove('active');
+  };
 
-document.querySelector('nav a:first-child').onclick = (e) => {
-  e.preventDefault();
-  sectionMenu.style.display = 'none';
-  sectionPesanan.style.display = 'block';
-  e.target.classList.add('active');
-  navMenu.classList.remove('active');
-};
+  navPesanan.onclick = (e) => {
+    e.preventDefault();
+    sectionMenu.style.display = 'none';
+    sectionPesanan.style.display = 'block';
+    navPesanan.classList.add('active');
+    navMenu.classList.remove('active');
+  };
+}
 
-
-// ==========================================
-// BAGIAN 3: LOGIKA PESANAN MASUK
-// ==========================================
+// ============ PESANAN ============
 const pesananList = document.getElementById('pesanan-list');
 let pesananTerakhir = null;
-
 const qPesanan = query(collection(db, 'pesanan'), orderBy('dibuat', 'desc'));
 
 onSnapshot(qPesanan, (snap) => {
   const semua = snap.docs;
-  
-  // Deteksi pesanan baru untuk bunyi "ting!"
   if (pesananTerakhir !== null && semua.length > 0) {
-    const terbaru = semua[0];
-    if (terbaru.id !== pesananTerakhir) {
-      bunyiNotif();
-    }
+    if (semua[0].id !== pesananTerakhir) bunyiNotif();
   }
   if (semua.length > 0) pesananTerakhir = semua[0].id;
 
@@ -93,7 +45,6 @@ onSnapshot(qPesanan, (snap) => {
     pesananList.innerHTML = '<div class="empty">Belum ada pesanan.</div>';
     return;
   }
-  
   pesananList.innerHTML = semua.map(d => {
     const p = d.data();
     const isBaru = p.status === 'baru';
@@ -125,7 +76,6 @@ function formatWaktu(ts) {
   return d.toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
 }
 
-// Bunyi notifikasi lokal (Audio API)
 function bunyiNotif() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -138,10 +88,7 @@ function bunyiNotif() {
   } catch (e) {}
 }
 
-
-// ==========================================
-// BAGIAN 4: LOGIKA KELOLA MENU
-// ==========================================
+// ============ KELOLA MENU ============
 const menuAdminList = document.getElementById('menu-admin-list');
 const formContainer = document.getElementById('form-container');
 const inputNama = document.getElementById('input-nama');
@@ -152,14 +99,18 @@ const btnBatal = document.getElementById('btn-batal');
 const btnTambahMenu = document.getElementById('btn-tambah-menu');
 const formJudul = document.getElementById('form-judul');
 
-btnTambahMenu.onclick = () => {
-  formContainer.style.display = 'block';
-  resetForm();
-};
-btnBatal.onclick = () => {
-  formContainer.style.display = 'none';
-  resetForm();
-};
+if (btnTambahMenu) {
+  btnTambahMenu.onclick = () => {
+    formContainer.style.display = 'block';
+    resetForm();
+  };
+}
+if (btnBatal) {
+  btnBatal.onclick = () => {
+    formContainer.style.display = 'none';
+    resetForm();
+  };
+}
 
 onSnapshot(collection(db, 'menu'), (snap) => {
   if (snap.empty) {
@@ -197,28 +148,61 @@ onSnapshot(collection(db, 'menu'), (snap) => {
   });
 });
 
-btnSimpan.onclick = async () => {
-  const nama = inputNama.value.trim();
-  const harga = parseInt(inputHarga.value, 10);
-  if (!nama || isNaN(harga) || harga < 0) return alert('Isi nama dan harga dengan benar.');
-  
-  btnSimpan.disabled = true;
-  try {
-    if (editId.value) {
-      await updateDoc(doc(db, 'menu', editId.value), { nama, harga });
-    } else {
-      await addDoc(collection(db, 'menu'), { nama, harga, dibuat: serverTimestamp() });
+if (btnSimpan) {
+  btnSimpan.onclick = async () => {
+    const nama = inputNama.value.trim();
+    const harga = parseInt(inputHarga.value, 10);
+    if (!nama || isNaN(harga) || harga < 0) return alert('Isi nama dan harga dengan benar.');
+    
+    btnSimpan.disabled = true;
+    try {
+      if (editId.value) {
+        await updateDoc(doc(db, 'menu', editId.value), { nama, harga });
+      } else {
+        await addDoc(collection(db, 'menu'), { nama, harga, dibuat: serverTimestamp() });
+      }
+      formContainer.style.display = 'none';
+      resetForm();
+    } catch (e) {
+      alert('Gagal simpan: ' + e.message);
+    } finally {
+      btnSimpan.disabled = false;
     }
-    formContainer.style.display = 'none';
-    resetForm();
-  } catch (e) {
-    alert('Gagal simpan: ' + e.message);
-  } finally {
-    btnSimpan.disabled = false;
-  }
-};
+  };
+}
 
 function resetForm() {
   editId.value = ''; inputNama.value = ''; inputHarga.value = '';
   formJudul.textContent = 'Tambah Menu Baru';
 }
+
+// ==========================================
+// LOGIKA NOTIFIKASI FCM (DIJALANKAN PALING AKHIR)
+// ==========================================
+const VAPID_KEY = "BDc3uruxJY2y8J8nRKlsZk1_DvglGBCBOF86DZ6tk_CiUKx3EjKRzZmKGu_nPlAbZxzxhNexntv0IKLWDdch_VM";
+
+async function mintaIzinNotifikasi() {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('Izin notifikasi diberikan.');
+      const messaging = getMessaging();
+      const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+      
+      if (currentToken) {
+        // Tampilkan token di Console dengan warna yang mencolok
+        console.log('%c=========================================', 'color: blue');
+        console.log('%c TOKEN FCM BERHASIL DIDAPAT:', 'color: green; font-size: 16px; font-weight: bold;');
+        console.log(currentToken);
+        console.log('%c=========================================', 'color: blue');
+      } else {
+        console.log('Gagal mendapatkan token.');
+      }
+    }
+  } catch (error) {
+    console.error('Error FCM (abaikan jika form menu berfungsi):', error);
+  }
+}
+
+// Panggil SETELAH semua tombol siap
+setTimeout(mintaIzinNotifikasi, 1000);
